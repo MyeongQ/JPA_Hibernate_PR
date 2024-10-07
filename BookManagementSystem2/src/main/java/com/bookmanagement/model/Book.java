@@ -1,18 +1,31 @@
 package com.bookmanagement.model;
 
+import javax.persistence.*;
+
+@Entity
+@Table(name = "BOOK")
 public class Book {
     // Create a POJO
 
     // field to be created : id, title, author, genre, pageCount
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+
+    @Column(name = "title")
     private String title;
+    @Column(name = "author")
     private String author;
+    @Column(name = "genre")
     private String genre;
+    @Column(name = "pagecount")
     private int pagecount;
 
+    public Book() {
+    }
+
     // constructors with parameters
-    public Book(int id, String title, String author, String genre, int pagecount) {
-        this.id = id;
+    public Book(String title, String author, String genre, int pagecount) {
         this.title = title;
         this.author = author;
         this.genre = genre;

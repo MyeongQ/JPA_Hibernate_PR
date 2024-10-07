@@ -2,15 +2,25 @@ package com.bookmanagement;
 
 import com.bookmanagement.model.Book;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityTransaction;
+import javax.persistence.Persistence;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
 public class BookService {
     private final Scanner input = new Scanner(System.in);
+    private final EntityManager em;
 
+    public BookService() {
+        EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("BookManagementSystem");
+        em = entityManagerFactory.createEntityManager();
+    }
 
     // Method to register book:
-    public void saveBook() {
+    public Book saveBook() {
         System.out.println("Title: ");
         String title = input.nextLine();
 
@@ -26,36 +36,56 @@ public class BookService {
         input.nextLine(); // consume new line
 
         // After getting all data from the user we create a new object using constructor
-        Book newBook = new Book(0, title, author, genre, pageCount);
 
-//        bookMapper.saveBook(newBook);
+        // transaction 생성
+        EntityTransaction tx = em.getTransaction();
+        // transaction 시작
+        tx.begin();
+
+        // Book 객체 생성
+        Book newBook = new Book(title, author, genre, pageCount);
+        em.persist(newBook);
+
+        // transaction 커밋
+        tx.commit();
+        return newBook;
     }
 
     // bring all listed books
     public List<Book> getAllBooks() {
-//        return bookMapper.getAllBooks();
-        return null;
+        return em.createQuery("select b from Book b", Book.class).getResultList();
     }
 
     // find book by id
     public Book getBookByID(int id) {
-//        Book book = bookMapper.getBook(id);
-//        if (book == null) {
-//            System.out.println("There is no such a book with this id: " + id);
-//        }
-//        return book;
-        return null;
+        return em.find(Book.class, id);
     }
 
     // method to delete book by id:
     public void deleteBookByID(int id) {
-//        bookMapper.deleteBook(id);
+        // transaction 생성
+        EntityTransaction tx = em.getTransaction();
+        // transaction 시작
+        tx.begin();
+
+        Book book = em.find(Book.class, id);
+        // 만약 book이 존재하면 remove
+        if(book != null) {
+            em.remove(book);
+        }
+        tx.commit();
     }
 
     // method to update:
     public void updateBook(int id) {
         // find book by id from the table:
+        // transaction 생성
+        EntityTransaction tx = em.getTransaction();
+        // transaction 시작
+        tx.begin();
+
         Book existBook = getBookByID(id);
+        em.persist(existBook);
 
         if (existBook == null) {
             System.out.println("Book with ID: " + id + "is not found.");
@@ -81,6 +111,11 @@ public class BookService {
 
             // We can leave id unchanged.
 //            bookMapper.updateBook(existBook);
+            // 변경 반영
+            em.flush();
+            tx.commit();
+
+
         }
     }
 }
