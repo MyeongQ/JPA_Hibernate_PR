@@ -1,14 +1,13 @@
 package com.bookmanagement;
 
+import com.bookmanagement.model.Author;
 import com.bookmanagement.model.Book;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 public class BookService {
     private final Scanner input = new Scanner(System.in);
@@ -24,8 +23,16 @@ public class BookService {
         System.out.println("Title: ");
         String title = input.nextLine();
 
-        System.out.println("Author: ");
-        String author = input.nextLine();
+        // 저자 등록
+        Set<Author> authors = new HashSet<>();
+        while(authors.size() < 5) {
+            System.out.printf("Author (up to 5, %d/5)%n", authors.size()+1);
+            String authorName = input.nextLine();
+            if (authorName.isEmpty()) {
+                break;
+            }
+            authors.add(new Author(authorName));
+        }
 
         System.out.println("Genre: ");
         String genre = input.nextLine();
@@ -43,8 +50,16 @@ public class BookService {
         tx.begin();
 
         // Book 객체 생성
-        Book newBook = new Book(title, author, genre, pageCount);
+        Book newBook = new Book(title, new HashSet<>(), genre, pageCount);
         em.persist(newBook);
+
+        // Author 저장
+        if (!authors.isEmpty()) {
+            authors.forEach(author -> {
+                author.setBook(newBook);
+                em.persist(author);
+            });
+        }
 
         // transaction 커밋
         tx.commit();
@@ -71,6 +86,15 @@ public class BookService {
         Book book = em.find(Book.class, id);
         // 만약 book이 존재하면 remove
         if(book != null) {
+            // 기존 저자 삭제
+            List<Author> existAuthors = em.createQuery("select a from Author a where a.book.id = :book_id", Author.class)
+                    .setParameter("book_id", book.getId())
+                    .getResultList();
+
+            if (!existAuthors.isEmpty()) {
+                existAuthors.forEach(em::remove);
+            }
+
             em.remove(book);
         }
         tx.commit();
@@ -85,7 +109,6 @@ public class BookService {
         tx.begin();
 
         Book existBook = getBookByID(id);
-        em.persist(existBook);
 
         if (existBook == null) {
             System.out.println("Book with ID: " + id + "is not found.");
@@ -94,8 +117,27 @@ public class BookService {
             System.out.println("Title: ");
             String title = input.nextLine();
 
-            System.out.println("Author: ");
-            String author = input.nextLine();
+            em.persist(existBook);
+
+            // 기존 저자 삭제
+            List<Author> existAuthors = em.createQuery("select a from Author a where a.book.id = :book_id", Author.class)
+                    .setParameter("book_id", existBook.getId())
+                    .getResultList();
+
+            if (!existAuthors.isEmpty()) {
+                existAuthors.forEach(em::remove);
+            }
+
+            // 저자 등록
+            Set<Author> authors = new HashSet<>();
+            while(authors.size() < 5) {
+                System.out.printf("Author (up to 5, %d/5)%n", authors.size()+1);
+                String authorName = input.nextLine();
+                if (authorName.isEmpty()) {
+                    break;
+                }
+                authors.add(new Author(authorName));
+            }
 
             System.out.println("Genre: ");
             String genre = input.nextLine();
@@ -105,9 +147,16 @@ public class BookService {
 
             // Start updating existing book:
             existBook.setTitle(title);
-            existBook.setAuthor(author);
             existBook.setGenre(genre);
             existBook.setPagecount(pagecount);
+
+            // Author 저장
+            if (!authors.isEmpty()) {
+                authors.forEach(author -> {
+                    author.setBook(existBook);
+                    em.persist(author);
+                });
+            }
 
             // We can leave id unchanged.
 //            bookMapper.updateBook(existBook);

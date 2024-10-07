@@ -1,6 +1,7 @@
 package com.bookmanagement.model;
 
 import javax.persistence.*;
+import java.util.Set;
 
 @Entity
 @Table(name = "BOOK")
@@ -14,8 +15,8 @@ public class Book {
 
     @Column(name = "title")
     private String title;
-    @Column(name = "author")
-    private String author;
+    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL)
+    private Set<Author> authors;
     @Column(name = "genre")
     private String genre;
     @Column(name = "pagecount")
@@ -25,9 +26,9 @@ public class Book {
     }
 
     // constructors with parameters
-    public Book(String title, String author, String genre, int pagecount) {
+    public Book(String title, Set<Author> authors, String genre, int pagecount) {
         this.title = title;
-        this.author = author;
+        this.authors = authors;
         this.genre = genre;
         this.pagecount = pagecount;
     }
@@ -49,12 +50,12 @@ public class Book {
         this.title = title;
     }
 
-    public String getAuthor() {
-        return author;
+    public Set<Author> getAuthor() {
+        return authors;
     }
 
-    public void setAuthor(String author) {
-        this.author = author;
+    public void setAuthors(Set<Author> authors) {
+        this.authors = authors;
     }
 
     public String getGenre() {
@@ -73,13 +74,17 @@ public class Book {
         this.pagecount = pagecount;
     }
 
+    public void addAuthor(Author author) {
+        this.authors.add(author);
+    }
+
     // .toString method
     @Override
     public String toString() {
         return "Book{" +
                 "id=" + id +
                 ", title='" + title + '\'' +
-                ", author='" + author + '\'' +
+                ", author='" + authors + '\'' +
                 ", genre='" + genre + '\'' +
                 ", pagecount=" + pagecount +
                 '}';
