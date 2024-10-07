@@ -1,10 +1,6 @@
 package com.bookmanagement;
 
 import com.bookmanagement.model.Book;
-import org.apache.ibatis.io.Resources;
-import org.apache.ibatis.session.SqlSession;
-import org.apache.ibatis.session.SqlSessionFactory;
-import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 
 import java.io.IOException;
 import java.util.List;
@@ -34,34 +30,15 @@ MiniProject: Book Management System
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
-        String resource = "mybatis-config.xml";
-        InputStream inputStream = Resources.getResourceAsStream(resource);
-        SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
 
-        // Open a SqlSession
-        SqlSession session = null;
-        try {
-            session = sqlSessionFactory.openSession();
-            start(session);
-        } catch (Exception e) {
-            // Handle exceptions appropriately
-            e.printStackTrace();
-            if (session != null) {
-                session.rollback(); // Rollback if an exception occurred
-            }
-        } finally {
-            if (session != null) {
-                session.commit();
-                session.close(); // Close the session in the finally block to ensure it's always closed
-            }
-        }
+        start();
     }
 
-    public static void start (SqlSession session) {
+    public static void start () {
         Scanner input = new Scanner(System.in);
 
         // Create an instance of service class
-        BookService bookService = new BookService(session);
+        BookService bookService = new BookService();
 
         int select;
 
